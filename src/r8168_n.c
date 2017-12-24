@@ -87,8 +87,6 @@
 #include <linux/seq_file.h>
 #endif
 
-unsigned long __devicepointer;
-
 /* Maximum number of multicast addresses to filter (vs. Rx-all-multicast).
    The RTL chips use a 64 element hash table based on the Ethernet CRC. */
 static const int multicast_filter_limit = 32;
@@ -22973,7 +22971,6 @@ static inline void rtl8168_request_esd_timer(struct net_device *dev)
         struct timer_list *timer = &tp->esd_timer;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
-        __devicepointer = (unsigned long)dev;
         timer_setup(timer, rtl8168_esd_timer, 0);
 #else
         setup_timer(timer, rtl8168_esd_timer, (unsigned long)dev);
@@ -22992,7 +22989,6 @@ static inline void rtl8168_request_link_timer(struct net_device *dev)
         struct timer_list *timer = &tp->link_timer;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
-        __devicepointer = (unsigned long)dev;
         timer_setup(timer, rtl8168_link_timer, 0);
 #else
         setup_timer(timer, rtl8168_link_timer, (unsigned long)dev);
@@ -24738,8 +24734,8 @@ static void
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
 rtl8168_esd_timer(struct timer_list *timer)
 {
-        struct net_device *dev = (struct net_device *)__devicepointer;
-        struct rtl8168_private *tp = netdev_priv(dev);
+        struct rtl8168_private *tp = from_timer(tp, timer, esd_timer);
+        struct net_device *dev = tp->dev;
 #else
 rtl8168_esd_timer(unsigned long __opaque)
 {
@@ -24884,8 +24880,8 @@ static void
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,15,0)
 rtl8168_link_timer(struct timer_list *timer)
 {
-        struct net_device *dev = (struct net_device *)__devicepointer;
-        struct rtl8168_private *tp = netdev_priv(dev);
+        struct rtl8168_private *tp = from_timer(tp, timer, link_timer);
+        struct net_device *dev = tp->dev;
 #else
 rtl8168_link_timer(unsigned long __opaque)
 {
